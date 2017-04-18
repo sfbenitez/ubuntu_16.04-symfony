@@ -1,0 +1,96 @@
+#!/bin/bash
+set -x
+
+function setup-symfony(){
+
+  # if composer.json is the same that the one that was used when build the docker image: sync src depends from image
+  # else, do nothing, since it would overwrite/break development depends
+  cmp "/assets/var/www/html/composer.json" "/var/www/html/composer.json"
+  if [ $? -eq 0 ]
+  then
+    # sync composer-installed files/depends:
+    for dir in vendor
+    do
+      rsync -Pav /assets/var/www/html/$dir/ /var/www/html/$dir/
+      chown -R ${DEVELOPER_USER}:www-data /var/www/html/$dir
+    done
+  fi
+
+  cp -a /assets/var/www/html/app/config/parameters.yml.tpl /var/www/html/app/config/parameters.yml
+
+  # load init-mysql-db generated environment
+  source /etc/profile.d/mysql-environment.sh
+  if [[ -z "$MYSQL_HOST" ]] || [[ "$MYSQL_HOST" == "localhost" ]]
+  then
+
+      sed -i "s|_MYSQL_HOST_|$MYSQL_HOST|g" /var/www/html/app/config/parameters.yml
+      sed -i "s|_MYSQL_USER_|$MYSQL_USER|g" /var/www/html/app/config/parameters.yml
+      sed -i "s|_MYSQL_PASS_|$MYSQL_PASS|g" /var/www/html/app/config/parameters.yml
+      sed -i "s|_MYSQL_DBNAME_|$MYSQL_DBNAME|g" /var/www/html/app/config/parameters.yml
+
+  else
+
+      env | grep ^MYSQL_ | while read var;
+      do
+        VAR_TO_REPLACE=$(echo $var | awk -F= '{print $1}')
+        VALUE_TO_SET=$(echo $var | awk -F= '{print $2}')
+        sed -i "s|_${VAR_TO_REPLACE}_|${VALUE_TO_SET}|g" /var/www/html/app/config/parameters.yml
+      done
+
+  fi
+
+  # set custom env drupal env vars into any .yml/.php file
+  env | grep ^SYMFONY_ | while read var;
+  do
+    VAR_TO_REPLACE=$(echo $var | awk -F= '{print $1}')
+    VALUE_TO_SET=$(echo $var | awk -F= '{print $2}')
+    sed -i "s|_${VAR_TO_REPLACE}_|${VALUE_TO_SET}|g" /var/www/html/app/config/parameters.yml
+  done
+
+
+  chown -R ${DEVELOPER_USER}:www-data /var/www/html
+
+  start-mysqld-safe
+
+  check-mysql-conn
+
+  while [ $? -ne 0 ]
+  do
+    sleep 1
+  done
+  
+  if [ ! -e "/var/lib/mysql/$MYSQL_DBNAME" ]
+  then
+    php bin/console doctrine:database:create
+  fi
+
+  # symfony schema update
+  cd /var/www/html
+  php bin/console doctrine:schema:update --force
+  php bin/console cache:clear --env=$ENVIRONMENT
+
+  pkill -f mysql.*
+
+  chown -R $DEVELOPER_USER:www-data /var/www/html &
+
+  chmod 775 /var/www/html/var
+  chmod -R 775 /var/www/html/var/logs
+  chmod -R 775 /var/www/html/var/cache
+
+  while [ ! -z "$(pgrep mysqld)" ]; do sleep 1; done
+
+}
+
+function set-environment-divergences() {
+
+  # remove xdebug if we are not in devel/staging environment
+  if [[ -z "$(echo $ENVIRONMENT | grep "dev\|stg")" ]]
+  then
+    rm /etc/php/apache2/conf.d/20-xdebug.ini
+  fi
+
+  # unset basic auth if we are not in devel/staging
+
+}
+
+
