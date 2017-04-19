@@ -16,28 +16,35 @@ function setup-symfony(){
     done
   fi
 
-  cp -a /assets/var/www/html/app/config/parameters.yml.tpl /var/www/html/app/config/parameters.yml
 
   # load init-mysql-db generated environment
   source /etc/profile.d/mysql-environment.sh
-  if [[ -z "$MYSQL_HOST" ]] || [[ "$MYSQL_HOST" == "localhost" ]]
-  then
+  export SYMFONY_DATABASE_HOST="$MYSQL_HOST"
+  export SYMFONY_DATABASE_USER="$MYSQL_USER"
+  export SYMFONY_DATABASE_PASS="$MYSQL_PASS"
+  export SYMFONY_DATABASE_NAME="$MYSQL_DBNAME"
 
-      sed -i "s|_MYSQL_HOST_|$MYSQL_HOST|g" /var/www/html/app/config/parameters.yml
-      sed -i "s|_MYSQL_USER_|$MYSQL_USER|g" /var/www/html/app/config/parameters.yml
-      sed -i "s|_MYSQL_PASS_|$MYSQL_PASS|g" /var/www/html/app/config/parameters.yml
-      sed -i "s|_MYSQL_DBNAME_|$MYSQL_DBNAME|g" /var/www/html/app/config/parameters.yml
-
-  else
-
-      env | grep ^MYSQL_ | while read var;
-      do
-        VAR_TO_REPLACE=$(echo $var | awk -F= '{print $1}')
-        VALUE_TO_SET=$(echo $var | awk -F= '{print $2}')
-        sed -i "s|_${VAR_TO_REPLACE}_|${VALUE_TO_SET}|g" /var/www/html/app/config/parameters.yml
-      done
-
-  fi
+  rm -f /etc/profile.d/symfony-environment.sh
+  cp -a /var/www/html/app/config/parameters.yml.dist /var/www/html/app/config/parameters.yml.tpl
+  grep '[[:alnum:]].*:' /var/www/html/app/config/parameters.yml.dist | grep -v "^parameters\|^#" | sed 's|^[[:space:]]*||g' | grep -v '^#' | \
+  while read parameter
+  do
+    DIST_KEY="$(echo $parameter | awk -F: '{print $1}')"
+    KEY="SYMFONY_$(echo $DIST_KEY | tr '[:lower:]' '[:upper:]')"
+    DIST_VALUE="$(echo $parameter | awk -F: '{print $2}' | sed 's|^[[:space:]]*||g')"
+    # if KEY-named docker environment variable is empty, use DIST_VALUE for VALUE
+    # in e.g.: KEY=SECRET and $SECRET is unset, parameters.yml.dist's secret value (~) will be used as $VALUE
+    if [ -z "${!KEY}" ]
+    then
+      VALUE="$DIST_VALUE"
+    else
+      VALUE="${!KEY}"
+    fi
+    eval "export ${KEY}='$VALUE'"
+    echo "export ${KEY}='$VALUE'" >> /etc/profile.d/symfony-environment.sh
+    sed -i "s|\($DIST_KEY\):.*|${DIST_KEY}: ${VALUE}|g" /var/www/html/app/config/parameters.yml.tpl
+  done
+  mv /var/www/html/app/config/parameters.yml.tpl /var/www/html/app/config/parameters.yml
 
   # set custom env drupal env vars into any .yml/.php file
   env | grep ^SYMFONY_ | while read var;
@@ -46,7 +53,6 @@ function setup-symfony(){
     VALUE_TO_SET=$(echo $var | awk -F= '{print $2}')
     sed -i "s|_${VAR_TO_REPLACE}_|${VALUE_TO_SET}|g" /var/www/html/app/config/parameters.yml
   done
-
 
   chown -R ${DEVELOPER_USER}:www-data /var/www/html
 
