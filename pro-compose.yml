@@ -15,20 +15,29 @@ services:
       - ENVIRONMENT=${ENVIRONMENT}
       - ENV_VHOST=${ENV_VHOST}
       - VIRTUAL_HOSTS=${VIRTUAL_HOSTS}
-      - MYSQL_HOST=${MYSQL_HOST}
-      - MYSQL_USER=${MYSQL_USER}
-      - MYSQL_PASS=${MYSQL_PASS}
-      - MYSQL_DBNAME=${MYSQL_DBNAME}
+      - MYSQL_HOST=${MYSQL_HOST} # defaults to 'localhost'
+      - MYSQL_USER=${MYSQL_USER} # defaults to 'root'
+      - MYSQL_PASS=${MYSQL_PASS} # defaults to ''
+      - MYSQL_DBNAME=${MYSQL_DBNAME} # defaults to '$PROJECT_NAME' or '_PROJECT_NAME_'
       - MEMCACHED_HOST=${MEMCACHED_HOST}
       - MEMCACHED_PORT=${MEMCACHED_PORT}
+      - SYMFONY_DATABASE_HOST=${SYMFONY_DATABASE_HOST} # every DB var defaults to the corresponding MYSQL_ var
+      - SYMFONY_DATABASE_PORT=${SYMFONY_DATABASE_PORT}
+      - SYMFONY_DATABASE_NAME=${SYMFONY_DATABASE_NAME}
+      - SYMFONY_DATABASE_USER=${SYMFONY_DATABASE_USER}
+      - SYMFONY_DATABASE_PASSWORD=${SYMFONY_DATABASE_PASSWORD}
+      - SYMFONY_DATABASE_VERSION=${SYMFONY_DATABASE_VERSION}
+      - SYMFONY_MAILER_TRANSPORT=${SYMFONY_MAILER_TRANSPORT}
+      - SYMFONY_MAILER_HOST=${SYMFONY_MAILER_HOST}
+      - SYMFONY_MAILER_USER=${SYMFONY_MAILER_USER}
+      - SYMFONY_MAILER_PASSWORD=${SYMFONY_MAILER_PASSWORD}
+      - SYMFONY_SECRET=${SYMFONY_SECRET}
     volumes:
-      - ${HOME}/.drush:${HOME}/.drush
       - ${SSH_CREDENTIALS_DIR}:${SSH_CREDENTIALS_DIR}
       - ${PROJECT_DIR}:${PROJECT_DIR}
       - ${PROJECT_DIR}/src:/var/www/html
       - ${DATA_DIR}:/data
-      - /opt/data/docker-containers-volumes/${DRUPAL_ROOT}/sites/default/private:${DRUPAL_ROOT}/sites/default/private
-      - /opt/data/docker-containers-volumes/${DRUPAL_ROOT}/sites/default/files:${DRUPAL_ROOT}/sites/default/files
+      - /opt/data/docker-containers-volumes/var/www/html/web/uploads:/var/www/html/web/uploads
       - /opt/data/docker-containers-volumes/var/log/apache2:/var/log/apache2
       - /opt/data/docker-containers-volumes/etc/apache2/htpasswd/env-htpasswd:/etc/apache2/htpasswd/env-htpasswd
       - /opt/data/docker-containers-volumes/var/lib/mysql:/var/lib/mysql
