@@ -96,7 +96,7 @@ sudo rm -rf data
 # FAQ
 
 * Where did the 'parameters.yml' file come from?
-  * Parameters file is dinamically generated from templates on container startup. You can modify default container templates at 'assets/var/www/html/app/config/parameters.yml' 
+  * Parameters file is dinamically generated from "SYMFONY_*" environment variables on container startup. You can modify default container environment variables on each docker-compose file
     
 # Contributing
 
