@@ -2,6 +2,19 @@
 
 # ToC (Table of Contents)
 
+   * [Rationale. YASDC?](#rationale-yasdc)
+      * [So, what's this about?](#so-whats-this-about)
+   * [Requirements](#requirements)
+   * [Start a symfony development](#start-a-symfony-development)
+         * [Setup considerations](#setup-considerations)
+   * [Build your own custom docker image](#build-your-own-custom-docker-image)
+   * [Destroy docker enviroment](#destroy-docker-enviroment)
+   * [Assets](#assets)
+   * [FAQ](#faq)
+   * [Contributing](#contributing)
+   * [Licence and Authors](#licence-and-authors)
+   * [TODO: sort braindumped notes](#todo-sort-braindumped-notes)
+
 # Rationale. YASDC?
 
 You will wonder, yet another symfony docker container?
@@ -91,6 +104,25 @@ sudo rm -rf data
 
 * It inherits [ubuntu_16.04-apache-php-mysql upstream's assets](https://github.com/Emergya/ubuntu_16.04-apache-php-mysql/blob/master/README.md#assets) and overwrites some:
 ```
+assets/
+├── bin
+│   ├── entrypoint.functions-symfony
+│   └── entrypoint-symfony
+├── etc
+│   ├── apache2
+│   │   └── sites-enabled
+│   │       └── 000-default.conf
+│   ├── drush
+│   │   └── aliases.drushrc.php
+│   ├── mysql
+│   │   └── my.cnf
+│   └── php
+│       └── 7.0
+│           └── apache2
+│               ├── conf.d
+│               │   └── 20-xdebug.ini
+│               └── php.ini
+├── initial.sql
 ```
 
 # FAQ
