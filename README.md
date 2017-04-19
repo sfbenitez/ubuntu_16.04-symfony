@@ -46,10 +46,15 @@ sed -i "s|$ENVIRONMENT-_PROJECT_NAME_.emergyalabs.com|$ENV_VHOST|g" $ENVIRONMENT
 ```
 * Either setup your own symfony source by:
 * Copy your symfony app source code into a 'src' dir in project's dir
+  * You can use our 'SymfonyZero' kickstarter project by cloning it into 'src':
+```
+git clone https://github.com/Emergya/SymfonyZero.git $PROJECT_DIR/src
+```
 * Install your symfony's composer depends using the containerized 'composer' binary by using this snippet:
 ```
-docker-compose -f dev-compose.yml run --rm $ENV_VHOST \
-  /bin/bash -c 'cd /var/www/html; composer install; chown -R $DEVELOPER_USER:www-data /var/www/html'  
+docker-compose -f dev-compose.yml run --rm \
+  --entrypoint "/bin/bash -c 'cd /var/www/html; yes | composer install; chown -R $(id -u):www-data /var/www/html'" \
+  $ENV_VHOST
 ```
 * Run the environment:
 ```
