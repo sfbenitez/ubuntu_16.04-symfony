@@ -1,6 +1,6 @@
-FROM emergya/ubuntu_16.04-apache-php-mysql:201704181012-9d04676
+FROM emergya/ubuntu_16.04-apache-php-mysql:201704232319-95dd796
 
-ENV BUILD_TIMESTAMP 201704181337
+ENV BUILD_TIMESTAMP 201704240142
 
 # Install symfony app dependencies with composer
 ADD assets/var/www/html /assets/var/www/html
