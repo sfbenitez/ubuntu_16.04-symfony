@@ -112,8 +112,6 @@ assets/
 │   ├── apache2
 │   │   └── sites-enabled
 │   │       └── 000-default.conf
-│   ├── drush
-│   │   └── aliases.drushrc.php
 │   ├── mysql
 │   │   └── my.cnf
 │   └── php
