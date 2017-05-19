@@ -1,4 +1,4 @@
-FROM emergya/ubuntu_16.04-apache-php-mysql:201704232319-95dd796
+FROM emergya/ubuntu_16.04-apache-php-mysql:201705191145-8d1948b
 
 ENV BUILD_TIMESTAMP 201704240142
 
